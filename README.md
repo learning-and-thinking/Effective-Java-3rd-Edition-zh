@@ -17,7 +17,7 @@
     - 第 7 条：消除过期对象引用
     - 第 8 条：避免使用 Finalizer 和 Cleaner 机制
     - 第 9 条：使用try-with-resources语句替代try-finally语句
- + **. . . **
+ + **. . .**
  
 # 声明
 
