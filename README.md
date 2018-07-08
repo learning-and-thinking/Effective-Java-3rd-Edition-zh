@@ -2,9 +2,11 @@
 
 📖 Effective Java (Third Edition) | Effective Java（第三版）翻译计划稿
 
+[![](https://img.shields.io/badge/License-GPL--3.0-brightgreen.svg)](./LICENSE)
+
 # 目录
 
- + [**第 1 章 引言**](./1.引言/第一章 引言.md)
+ + [**第 1 章 引言**](./1.%E5%BC%95%E8%A8%80/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%BC%95%E8%A8%80.md)
  + **第 2 章 创建和销毁对象**
     - 第 1 条：考虑用静态工厂方法代替构造函数
     - 第 2 条：遇到多个构造器参数时要考虑用构建器
