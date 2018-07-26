@@ -22,9 +22,79 @@ JAVA 语言不仅不能保证终止方法或清除方法的及时执行，它甚
 
 那么对于对象封装资源需要被终止的类，比如文件或线程相关类，不使用其终止方法或清除方法，你应该怎么做呢？**让你的类实现 `AutoCloseable` 接口**，并且让客户端在每个实例不在被需要时调用 `close` 方法，通常使用 `Try-with-resources` 保证一旦出现异常确保其终止（[第 9 条][Item9]）。有个值得注意的细节，实例必须持续跟踪它是否被关闭：`close` 方法必须在一个字段中记录该对象是无效的，然后另一个方法必须检查这个字段，如果在该对象已经被关闭后请求则抛出 `IllegalStateException` 异常。
 
-那么，终止方法和清除方法有没有什么用处呢？它们可能有两种合法用途。
+那么，终止方法和清除方法有没有什么用处呢？它们可能有两种合法用途。一种用途是当对象的所有者忘记调用前面段落中建议使用的 `close` 方法的时，它们可以作为安全网（safety net）。虽然不能保证清除方法或终止方法会及时运行（或者根本不运行），那也比如果客户端不调用就永远不释放资源强得多。如果你正考虑写安全网终止方法，建议你三思这种额外的保护是否值得你付出这份额外的代价。比如 `FileInputStream`、`FileOutputStream`、`ThreadPoolExecutor` 和 `java.sql.Connection` 这些依赖库类，就使用的作为安全网的终止方法。
+
+另一种清除方法的合法用途与本地对等体（*native peer*s）有关。本地对等体是一个本地对象（非 Java 对象），普通对象通过本地方法委托给一个本地对象。因为本地对等体不是普通对象，所以垃圾回收器并不知道它的存在，所以当它的 Java 对等体被回收的时候它不会被回收。假设程序性能是可接受的而且本地对等体不含有关键资源，这样的情况下，清除方法或终止方法正好能派上用场。如果性能不可接受或者本地对等体含有必须被及时回收的资源，你应该使用前面段落中建议的 `close` 方法。
+
+清除方法使用起来有些棘手。下面用一个简单的 `Room` 类演示一下。假设 Room 的对象必须在它被回收前清除。`Room` 类实现了 `AutoCloseable` 接口，意味着它可以使用清除方法自动清除安全网。与终止方法不同，清除方法不会污染类的公共 API：
+
+```java
+//一个使用清除方法作为安全网的 AutoCloseable 类
+public class Room implements AutoCloseable {
+    private static final Cleaner cleaner = Cleaner.create();
+    
+    // 需要打扫的房间，一定不要认为与房间有关!
+    private static class State implements Runnable {
+        int numJunkPiles; // 房间里的垃圾堆数量
+        State(int numJunkPiles) {
+            this.numJunkPiles = numJunkPiles;
+        } 
+        
+        // 由 close 方法或清除方法调用
+        @Override 
+        public void run() {
+            System.out.println("Cleaning room");
+            numJunkPiles = 0;
+        }
+    } 
+    // 这个房间的状态, 与我们定义的 cleanable 共享
+    private final State state;
+    // 我们定义的 cleanable. 当可以获得垃圾回收器时清理房间
+    private final Cleaner.Cleanable cleanable;
+    public Room(int numJunkPiles) {
+        state = new State(numJunkPiles);
+        cleanable = cleaner.register(this, state);
+    } 
+    @Override 
+    public void close() {
+        cleanable.clean();
+    }
+}
+```
+
+静态内部类 `State` 含有清除方法所需要的资源来清理房间。使用 `numJunkPiles` 变量简单的表示房间中的垃圾。更实际地说，它可能包含了一个指向本地对等体的 `long` 常量指针。`State` 实现了`Runnable` 接口并且它的 `run` 方法只能被 `Cleanable` 调用一次，`cleanbale` 就是在 `Room` 构造器中把带有清除方法的 `State` 的实例添加时获得的对象。run 方法的调用会触发两件事：通常 Room 的 close 方法的调用会触发 Cleanable 的 clean 方法。如果在 Room 实例可以被回收时客户端调用 close 方法失败，清除方法将会有效的调用 State 类的 run 方法。
+
+State 实例与 Room 实例无关，这一点至关重要。如果不是的话，将会使 Room 实例变得不可被回收（也不会被自动清理）。非静态内部类包含对它们封闭实例的引用（[第 24 条][Item24]），因此，State 必须是静态内部类。同样，使用 lambda 表达式也是不可取的，因为它们可以轻易捕获对封闭对象的引用。
+
+前面段落中提到，Room 的清除方法仅仅是用来作为安全网的。如果客户端把所有的 Room 对象包含在 try-with-resource 块中实例化，就再也不需要自动清理了。下面这个行为良好的客户端演示了这种方式：
+
+```java
+public class Adult {
+    public static void main(String[] args) {
+        try (Room myRoom = new Room(7)) {
+            System.out.println("Goodbye");
+        }
+    }
+}
+```
+
+运行 Adult 程序，会向你期望的那样，在清理房间后输出 Goodbye。那么永远不会清扫房间的坏程序是怎样的呢？
+
+```java
+public class Teenager{
+    public static void main(String[] args){
+        new Room(99);
+        System.out.println("Peace out");
+    }
+}
+```
+
+你可能会期望它在清理完房间后打印出 Peace out，然而在我的机器上，它从没有打印过 Cleanning room ，它只会退出程序。这就是我们之前谈到的不可预测性。清除方法的规范这样说：“在 `System.exit` 的过程中清除方法的行为是具体的。关于是否调用清除操作并没有保证。”即使规范不这么说，对于正常程序退出也是如此。在我的机器上，给 Teenager 的 main 方法添加一行 `System.gc()` 就可以让它在退出程序前打印出 `Cleaning room`  ，但不保证你能在你的电脑上看到同样的情形。
+
+总之，不要使用清除方法或在 Java 9 之前的终止方法，除非作为安全网或终止非关键的本地资源。即使这样，也要注意不确定性和性能带来的后果。
 
 [Item9]: url	"在未来填入第 9 条的 url，否则无法进行跳转"
-[Item12]: url	"在未来填入第 12 条的url，否则无法进行跳转"
+[Item12]: url	"在未来填入第 12 条的 url，否则无法进行跳转"
+[Item24]: url	"在未来填入第 24 条的 url，否贼无法进行跳转"
 [ThreadStop]: 为什么Thread,stop,Thread.suspend,Thread.resume和Runtime.runFinalizersOnExit会被贬低？	"https://docs.oracle.com/javase/8/docs/technotes/guides/concurrency/threadPri"
 
