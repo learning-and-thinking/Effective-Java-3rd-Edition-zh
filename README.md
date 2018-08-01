@@ -17,7 +17,7 @@
     - [第 7 条：消除过期对象引用](./2.创建和销毁对象/第%207%20条：消除过期对象引用.md)
     - 第 8 条：避免使用 Finalizer 和 Cleaner 机制
     - 第 9 条：使用 try-with-resources 语句替代 try-finally 语句
- + 第 3 章 对所有对象都通用的方法
+ + **第 3 章 对所有对象都通用的方法**
     - 第 10 条：覆盖 equals 时请遵守通用约定
     - 第 11 条：覆盖 equals 时总要覆盖 hashCode
     - 第 12 条：始终要覆盖 toString
