@@ -1,4 +1,4 @@
-## 第 8 条：避免使用 Finalizer 和 Cleaner 机制 
+# 第 8 条：避免使用 Finalizer 和 Cleaner 机制 
 
 **Finalizer 具有不可预测性，通常比较危险，并且一般情况下也没有必要使用。** Finalizer 的使用会导致程序行为不稳定，降低性能，还会带来一些可移植性问题。Finalizer 只在很少情况下有用，在本条目的后面部分会做介绍，但根据经验，你应该避免使用它们。从 Java 9 开始，finalizer 已经被弃用了，然而在一些 JAVA 库中依然可以看到它们的身影。Java 9 中替代 finalizer 的是 cleaner。**Cleaner 比 finalizer 危险性低一些，但仍然是不可预测的，会使程序运行缓慢，通常情况下依然没必要使用**。
 

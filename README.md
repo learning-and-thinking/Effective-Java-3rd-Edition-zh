@@ -15,8 +15,8 @@
     - [第 5 条：依赖注入优于资源硬连接](./2.创建和销毁对象/第%205%20条：依赖注入优于资源硬连接.md)
     - [第 6 条：避免创建不必要的对象](./2.创建和销毁对象/第%206%20条：避免创建不必要的对象.md)
     - [第 7 条：消除过期对象引用](./2.创建和销毁对象/第%207%20条：消除过期对象引用.md)
-    - 第 8 条：避免使用 Finalizer 和 Cleaner 机制
-    - 第 9 条：使用 try-with-resources 语句替代 try-finally 语句
+    - [第 8 条：避免使用 Finalizer 和 Cleaner 机制](./2.创建和销毁对象/第%208%20条：避免使用%20Finalizer%20和%20Cleaner%20机制.md)
+    - [第 9 条：使用 try-with-resources 语句替代 try-finally 语句](./2.创建和销毁对象/第%209%20条：try-with-resources%20优于%20try-finally.md)
  + **第 3 章 对所有对象都通用的方法**
     - 第 10 条：覆盖 equals 时请遵守通用约定
     - 第 11 条：覆盖 equals 时总要覆盖 hashCode
