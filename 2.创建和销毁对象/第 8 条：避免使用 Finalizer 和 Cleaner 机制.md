@@ -1,4 +1,4 @@
-# 第 8 条：避免使用 Finalizer 和 Cleaner 机制 
+# 第 8 条：避免使用 Finalizer 和 Cleaner 机制
 
 **Finalizer 具有不可预测性，通常比较危险，并且一般情况下也没有必要使用。** Finalizer 的使用会导致程序行为不稳定，降低性能，还会带来一些可移植性问题。Finalizer 只在很少情况下有用，在本条目的后面部分会做介绍，但根据经验，你应该避免使用它们。从 Java 9 开始，finalizer 已经被弃用了，然而在一些 JAVA 库中依然可以看到它们的身影。Java 9 中替代 finalizer 的是 cleaner。**Cleaner 比 finalizer 危险性低一些，但仍然是不可预测的，会使程序运行缓慢，通常情况下依然没必要使用**。
 
@@ -20,7 +20,7 @@ Finalizer 存在另外一个问题，在终结过程中抛出的未被捕获的�
 
 **Finalizer 还有一个严重的安全问题：它们会打开你的类致使其受到 finalizer 攻击**（finalizer attacks）。Finalizer 攻击背后的思想很简单：如果从构造器或它的序列化等价物 —— `readObject` 和 `readResolve` 方法（[第 12 章][Chapter12]）中抛出一个异常，那么恶意子类的 Finalizer 就可以在部分构造的对象上运行，而这些对象本应该夭折。这个 finalizer 可以在静态字段中记录一个该对象的引用，从而防止对该对象进行垃圾回收。一旦记录了格式错误的对象（malformed object），在这个早就不该存在的对象上任意调用方法就会变得非常简单。**从构造器中抛出异常应该足以阻止对象的产生；但在 finalizer 存在的情况下，却并非如此。 **这样的攻击会导致可怕的结果。final 类避免了Finalizer 攻击，因为没人能编写 final 类的恶意子类。**为了保护非 final 类不受 finalizer 攻击，可以编写一个不执行任何操作的 finalize 方法 **。
 
-那么对于对象中封装的资源确实需要被终止的类，比如文件或线程，除了编写其 finalizer 或 cleaner，你应该怎么做呢？**可以让你的类实现 `AutoCloseable` 接口**，并且要求该类的客户端在每个实例不再被需要时调用 `close` 方法，通常使用 `try-with-resources` 来确保即使出现异常时亦能正常终止（[第 9 条][item9]）。有个值得注意的细节，实例必须持续跟踪自己是否被关闭：`close` 方法必须在一个域中记录该对象不再是有效的，如果该对象中的其他方法在对象被关闭之后调用，它们就必须检查这个域，并抛出 `IllegalStateException` 异常。 
+那么对于对象中封装的资源确实需要被终止的类，比如文件或线程，除了编写其 finalizer 或 cleaner，你应该怎么做呢？**可以让你的类实现 `AutoCloseable` 接口**，并且要求该类的客户端在每个实例不再被需要时调用 `close` 方法，通常使用 `try-with-resources` 来确保即使出现异常时亦能正常终止（[第 9 条][item9]）。有个值得注意的细节，实例必须持续跟踪自己是否被关闭：`close` 方法必须在一个域中记录该对象不再是有效的，如果该对象中的其他方法在对象被关闭之后调用，它们就必须检查这个域，并抛出 `IllegalStateException` 异常。
 
 那么，finalizer 和 cleaner有没有什么用处呢？它们可能有两种合法用途。第一种用途是当对象的所有者忘记调用前面段落中建议使用的 `close` 方法的时，它们可以作为安全网（safety net）。虽然不能保证 finalizer 或 cleaner 会及时运行（或者根本不运行），但在客户端无法正常结束操作的情况下，迟一点释放资源总比永远不释放要好。如果你正考虑编写这样一个安全网 finalizer，建议你三思是否值得为这种保护付出代价。一些 Java 库中的类，比如 `FileInputStream`、`FileOutputStream`、`ThreadPoolExecutor` 和 `java.sql.Connection` 就把 finalizer 作为了安全网。
 
@@ -32,21 +32,21 @@ Cleaner 使用起来有些棘手。下面用一个简单的 `Room` 类演示一�
 // 一个实现了 AutoCloseable 接口使用 Cleaner 作为安全网的类
 public class Room implements AutoCloseable {
     private static final Cleaner cleaner = Cleaner.create();
-    
+
     // 需要清除的资源，不要牵涉到 Room 对象!
     private static class State implements Runnable {
         int numJunkPiles; // 房间里的垃圾堆数量
         State(int numJunkPiles) {
             this.numJunkPiles = numJunkPiles;
-        } 
-        
+        }
+
         // 由 close 方法或 Cleaner 调用
-        @Override 
+        @Override
         public void run() {
             System.out.println("Cleaning room");
             numJunkPiles = 0;
         }
-    } 
+    }
     // 这个房间的状态, 与我们定义的 cleanable 共享
     private final State state;
     // 我们定义的 cleanable. 当可以获得垃圾回收器时清理房间
@@ -54,8 +54,8 @@ public class Room implements AutoCloseable {
     public Room(int numJunkPiles) {
         state = new State(numJunkPiles);
         cleanable = cleaner.register(this, state);
-    } 
-    @Override 
+    }
+    @Override
     public void close() {
         cleanable.clean();
     }
@@ -93,18 +93,12 @@ public class Teenager{
 
 总之，不要使用 Cleaner 或 Java 9 之前的 Finalizer ，除非作为安全网或用来终止非关键的本地资源。即使这样，也要当心不确定性和性能影响。
 
-
-
 <p id="Gamma95">[ThreadStop] Why Are Thread.stop, Thread.suspend, Thread.resume and Runtime.runFinalizersOnExit Deprecated? 1999. Sun Microsystems. <https://docs.oracle.com/javase/8/docs/technotes/guides/concurrency/threadPrimitiveDeprecation.html>
 
-
-
-[item9]: url	"在未来填入第 9 条的 url，否则无法进行跳转"
-[chapter12]: url	"在未来填入第 12 章的 url，否则无法进行跳转"
-[item24]: url	"在未来填入第 24 条的 url，否贼无法进行跳转"
-[chapter21]: url	"在未来填入第 21 章的 url，否则无法进行跳转"
-
-
+[item9]: ./第%209%20条：try-with-resources%20优于%20try-finally.md "第 9 条：try-with-resources 优于 try-finally"
+[item24]: url "在未来填入第 24 条的 url，否贼无法进行跳转"
+[chapter12]: url "在未来填入第 12 章的 url，否则无法进行跳转"
+[chapter21]: url "在未来填入第 21 章的 url，否则无法进行跳转"
 
 > 翻译：Injer
 >

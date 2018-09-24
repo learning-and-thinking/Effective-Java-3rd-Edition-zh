@@ -93,7 +93,7 @@ static String firstLineOfFile(String path, String defaultVal) {
 Boston: Addison-Wesley.
 ISBN: 032133678X.</p>
 
-[item8]: ./第%208%20条：避免使用%20Finalizer%20和%20Cleaner%20机制.md  "第2章第8条"
+[item8]: ./第%208%20条：避免使用%20Finalizer%20和%20Cleaner%20机制.md  "第 8 条：避免使用 Finalizer 和 Cleaner 机制"
 
 >翻译：Angus
 >
