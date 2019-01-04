@@ -113,7 +113,7 @@ public int hashCode() {
 
 
 
-[Item10]: url	"./第%2010%20条：覆盖%20equals%20时请遵守通用约定.md"
+[Item10]: 第%2010%20条：覆盖%20equals%20时请遵守通用约定.md	"第十条"
 [Item83]: url	"在未来填入第 83 条的 url，否则无法进行跳转"
 [Guava]: https://github.com/google/guava	"Guava. 2017. Google Inc."
 
