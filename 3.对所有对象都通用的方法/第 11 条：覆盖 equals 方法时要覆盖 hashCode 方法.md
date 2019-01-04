@@ -36,11 +36,11 @@ m.put(new PhoneNumber(707, 867, 5309), "Jenny");
 
    a. 为该域计算一个 int 型的 hash 码 C：
 
-   ​	i. 如果该域是私有类型，则计算 `Type.hashCode(f)`，其中 Type 是对应于 f 类型的装箱类。
-
-   ​	ii. 如果该域是对象引用，并且该类的 equals 方法递归地调用 equals 方法比较该域，递归调用域内的 hashCode 方法。如果需要更复杂的对比关系，则为这个域计算一个“范式（canonical representation）”，然后针对这个范式调用 hashCode。如果这个域的值是 null，则返回 0（或者其他常数，但通常是 0）。
-
-   ​	iii. 如果该域是数组，则要把每一个元素当作单独的域来处理。也就是说，递归地应用上述规则，对每个关键元素计算一个 hash 码，然后根据步骤 2.b. 中的做法把这些 hash 值组合起来。如果数组中没有关键元素，则使用常量，但最好不要使用 0。如果所有元素都是关键元素，使用 `Arrays.hashCode`。
+   	i. 如果该域是私有类型，则计算 `Type.hashCode(f)`，其中 Type 是对应于 f 类型的装箱类。
+	
+   	ii. 如果该域是对象引用，并且该类的 equals 方法递归地调用 equals 方法比较该域，递归调用域内的 hashCode 方法。如果需要更复杂的对比关系，则为这个域计算一个“范式（canonical representation）”，然后针对这个范式调用 hashCode。如果这个域的值是 null，则返回 0（或者其他常数，但通常是 0）。
+	
+   	iii. 如果该域是数组，则要把每一个元素当作单独的域来处理。也就是说，递归地应用上述规则，对每个关键元素计算一个 hash 码，然后根据步骤 2.b. 中的做法把这些 hash 值组合起来。如果数组中没有关键元素，则使用常量，但最好不要使用 0。如果所有元素都是关键元素，使用 `Arrays.hashCode`。
 
    b. 按照下面的公式，把步骤 2.a. 计算的 hash 码 C 合并到 result 中：`result = 31 * result + c`
 
@@ -109,7 +109,7 @@ public int hashCode() {
 
 
 
-[Item10]: url	"在未来填入第 10 条的 url，否则无法进行跳转"
+[Item10]: url	"./第%2010%20条：覆盖%20equals%20时请遵守通用约定.md"
 [Item83]: url	"在未来填入第 83 条的 url，否则无法进行跳转"
 [Guava]: https://github.com/google/guava	"Guava. 2017. Google Inc."
 
