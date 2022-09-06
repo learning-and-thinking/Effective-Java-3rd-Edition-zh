@@ -8,7 +8,7 @@ Finalizer 和 Cleaner 的缺点之一是不能保证它们被及时执行[JLS, 1
 
 及时地执行 finalizer 和 cleaner 正是垃圾回收算法的一个主要功能，然而它在不同的 JVM 实现中差别很大。依赖于 finalizer 或 cleaner 执行及时性的程序的表现也可能发现同样的变化。这样的程序在你测试用的 JVM 平台上运行得非常好，而在你最重要的客户的 JVM 平台上却根本无法运行，这种情况是完全有可能发生的。
 
-延迟终结过程不仅仅只是一个理论上的问题。给一个类添加 finaler 会任意地延迟该类实例的回收过程。我的一位同事在调试一个长期运行的 GUI 应用时，程序莫名其妙报了`OutOfMemoryError`的错误然后死掉。我们分析程序死掉的时期发现，应用程序的 finalizer 队列中有成千上万个图形对象（graphics objects）在等着被终结和回收。不幸的是，这个 finalizer 线程的优先级比该程序的其它线程的优先级低，所以这些对象被终结的速度比不上它们进入终结状态的速度。Java 语言规范并不能保证哪个线程会执行 finalizer ，所以除了避免使用 finalizer 之外，没有别的简便方法来避免这类问题。在这方面 cleaner 比 finalizer 好一点，因为类的作者可以控制自己的 cleaner 线程，但是 cleaner 依然会在垃圾回收器的控制下在后台运行，所以也不能保证及时清理。
+延迟终结过程不仅仅只是一个理论上的问题。给一个类添加 finalizer 会任意地延迟该类实例的回收过程。我的一位同事在调试一个长期运行的 GUI 应用时，程序莫名其妙报了`OutOfMemoryError`的错误然后死掉。我们分析程序死掉的时期发现，应用程序的 finalizer 队列中有成千上万个图形对象（graphics objects）在等着被终结和回收。不幸的是，这个 finalizer 线程的优先级比该程序的其它线程的优先级低，所以这些对象被终结的速度比不上它们进入终结状态的速度。Java 语言规范并不能保证哪个线程会执行 finalizer ，所以除了避免使用 finalizer 之外，没有别的简便方法来避免这类问题。在这方面 cleaner 比 finalizer 好一点，因为类的作者可以控制自己的 cleaner 线程，但是 cleaner 依然会在垃圾回收器的控制下在后台运行，所以也不能保证及时清理。
 
 Java 语言规范不仅不能保证 finalizer 或 cleaner 的及时执行，它甚至都不能保证它们会被执行。当一个程序终止时，某些已经无法访问的对象的 finalizer 却根本没有执行，这也是完全有可能的情况。所以，**永远不要依靠 finalizer 或 cleaner 来更新重要的持久状态**。比如，使用 finalizer 或 cleaner 释放共享资源（比如数据库）上的持久锁（persistent lock），很容易让整个分布式系统垮掉。
 
@@ -100,6 +100,7 @@ public class Teenager{
 [chapter12]: url "在未来填入第 12 章的 url，否则无法进行跳转"
 [chapter21]: url "在未来填入第 21 章的 url，否则无法进行跳转"
 
-> 翻译：Injer
+> 翻译：Inger
 >
 > 校对：Angus
+
